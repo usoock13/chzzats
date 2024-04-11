@@ -1,0 +1,16 @@
+{
+  "dependencies": {
+    "isomorphic-ws": "^5.0.0"
+  },
+  "name": "chzzats",
+  "version": "1.0.0",
+  "main": "main.js",
+  "devDependencies": {},
+  "scripts": {
+    "start": "node main.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
