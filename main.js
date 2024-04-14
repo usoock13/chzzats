@@ -1,7 +1,8 @@
+const http = require("http");
 const https = require("https");
 const WebSocket = require("isomorphic-ws");
 
-const parameter = "8cee869baf37a7682e9931d51cba09b6";
+// const parameter = "bee4b42475b5937226b8b7ccbe2eb2dc";
 
 const GetDataFromRes = async (res) => {
     let result = '';
@@ -11,9 +12,9 @@ const GetDataFromRes = async (res) => {
     return result;
 }
 
-(async () => {
-    https.get(`https://api.chzzk.naver.com/polling/v2/channels/${parameter}/live-status`, async (res) => {
-        let str = await GetDataFromRes(res);
+const GetDonations = (parameter, res) => {
+    https.get(`https://api.chzzk.naver.com/polling/v2/channels/${parameter}/live-status`, async (channelRes) => {
+        let str = await GetDataFromRes(channelRes);
         let channelId = JSON.parse(str).content.chatChannelId;
         
         let url = `https://comm-api.game.naver.com/nng_main/v1/chats/access-token?channelId=${channelId}&chatType=STREAMING`;
@@ -43,7 +44,6 @@ const GetDataFromRes = async (res) => {
             ws.onmessage = (data) => {
                 let parsed = JSON.parse(data.data);
                 if(parsed.cmd == 10100) {
-                    console.log(parsed);
                     ws.send(JSON.stringify({
                         "ver": "2",
                         "cmd": 5101,
@@ -56,14 +56,30 @@ const GetDataFromRes = async (res) => {
                         "tid": 2
                     }));
                 } else if(parsed.cmd == 15101) {
-                    console.log(parsed);
+                    // console.log(parsed);
+                    let result = "";
                     parsed.bdy.messageList.forEach(message => {
                         const extras = JSON.parse(message.extras);
                         if(extras["payAmount"])
-                            console.log(`${extras.nickname} : ${extras["payAmount"]}`);
+                            result += `${extras.nickname} : ${extras["payAmount"]}\n`;
                     });
+                    res.write(result);
+                    res.end();
                 }
             };
         })
     });
-})();
+}
+
+const server = http.createServer((req, res) => {
+    let body = '';
+    req.on('data', chunck => {
+        body += chunck;
+    });
+    req.on('end', () => {
+        GetDonations(body, res);
+    })
+});
+server.listen(2024, async () => {
+    console.log("http server is running on the 2024 port.");
+});
